@@ -1,103 +1,88 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+import { useState } from 'react'
+import { EvaluateSchema, evaluateSchema } from './schema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+
+export default function HomePage() {
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<EvaluateSchema>({
+        mode: 'onBlur',
+        resolver: zodResolver(evaluateSchema),
+        defaultValues: {
+            captionA: '',
+            captionB: '',
+            genre: '',
+            target: '',
+        },
+    })
+
+    const [result, setResult] = useState<string | null>(null)
+    const [loading, setLoading] = useState(false)
+
+    const onSubmit = async (data: EvaluateSchema) => {
+        setLoading(true)
+        const result = await fetch('/api/evaluate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        const json = await result.json()
+        setResult(json.result)
+        setLoading(false)
+    }
+
+    return (
+        <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+            <h1 className="text-3xl font-bold text-center">InstaBoostLab</h1>
+            <p className="text-center text-muted-foreground">InstagramキャプションA/BをAIが評価します。</p>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                    <Label htmlFor="captionA">キャプションA</Label>
+                    <Textarea {...register('captionA')} id="captionA" className="w-full border p-2" />
+                    {errors.captionA && <p className="text-red-500 text-sm">{errors.captionA.message}</p>}
+                </div>
+
+                <div>
+                    <Label htmlFor="captionB">キャプションB</Label>
+                    <Textarea {...register('captionB')} id="captionB" className="w-full border p-2" />
+                    {errors.captionB && <p className="text-red-500 text-sm">{errors.captionB.message}</p>}
+                </div>
+
+                <div>
+                    <Label htmlFor="genre">投稿ジャンル</Label>
+                    <Input {...register('genre')} id="genre" className="w-full border p-2" />
+                </div>
+
+                <div>
+                    <Label htmlFor="target">ターゲット層</Label>
+                    <Input {...register('target')} id="target" className="w-full border p-2" />
+                </div>
+
+                <Button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md">
+                    AIに評価してもらう
+                </Button>
+            </form>
+
+            {loading && <p>評価中...</p>}
+            {result && (
+                <div className="mt-6 p-4 border rounded-md bg-muted">
+                    <h2 className="font-semibold">🧠 AIの評価結果</h2>
+                    <pre className="whitespace-pre-wrap text-sm">{result}</pre>
+                </div>
+            )}
+        </main>
+    )
 }
