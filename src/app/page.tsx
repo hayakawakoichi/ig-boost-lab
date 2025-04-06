@@ -11,6 +11,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { PostCard } from '@/components/PostCard'
 import { toast } from 'sonner'
 import { EvaluationResult } from '@/components/EvaluationResult'
+import { uploadToCloudinary } from '@/lib/uploadToCloudinary'
 
 export default function HomePage() {
     const form = useForm<EvaluateSchema>({
@@ -58,12 +59,12 @@ export default function HomePage() {
         }
 
         try {
-            const [base64A, base64B] = await Promise.all([toBase64(imageA), toBase64(imageB)])
+            const [urlA, urlB] = await Promise.all([uploadToCloudinary(imageA), uploadToCloudinary(imageB)])
 
             const payload = {
                 ...data,
-                imageA: base64A,
-                imageB: base64B,
+                imageA: urlA,
+                imageB: urlB,
             }
 
             const res = await fetch('/api/vision-evaluate', {
@@ -167,13 +168,4 @@ export default function HomePage() {
             {result && <EvaluationResult result={result} />}
         </main>
     )
-}
-
-function toBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-    })
 }

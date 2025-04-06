@@ -13,8 +13,8 @@ export const evaluateModel = {
         .describe('キャプションB'),
     genre: z.string().max(100, 'ジャンルは100文字以内で入力してください').optional().describe('ジャンル'),
     target: z.string().max(100, 'ターゲット層は100文字以内で入力してください').optional().describe('ターゲット層'),
-    imageA: z.instanceof(File).optional().describe('画像A'),
-    imageB: z.instanceof(File).optional().describe('画像B'),
+    imageA: z.string().optional().describe('画像A'),
+    imageB: z.string().optional().describe('画像B'),
 }
 
 export const evaluateSchema = z.object(evaluateModel)
