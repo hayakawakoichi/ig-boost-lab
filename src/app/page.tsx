@@ -6,17 +6,18 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
 import { useState } from 'react'
-import { EvaluateSchema, evaluateSchema } from './schema'
+import { EvaluateSchema, evaluateSchema, EvaluateResult, evaluateModel } from './schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form'
+import { TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { InfoIcon } from 'lucide-react'
 
 export default function HomePage() {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<EvaluateSchema>({
-        mode: 'onBlur',
+    const form = useForm<EvaluateSchema>({
+        mode: 'onChange',
         resolver: zodResolver(evaluateSchema),
         defaultValues: {
             captionA: '',
@@ -26,7 +27,7 @@ export default function HomePage() {
         },
     })
 
-    const [result, setResult] = useState<string | null>(null)
+    const [result, setResult] = useState<EvaluateResult | null>(null)
     const [loading, setLoading] = useState(false)
 
     const onSubmit = async (data: EvaluateSchema) => {
@@ -48,39 +49,148 @@ export default function HomePage() {
             <h1 className="text-3xl font-bold text-center">InstaBoostLab</h1>
             <p className="text-center text-muted-foreground">InstagramキャプションA/BをAIが評価します。</p>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                    <Label htmlFor="captionA">キャプションA</Label>
-                    <Textarea {...register('captionA')} id="captionA" className="w-full border p-2" />
-                    {errors.captionA && <p className="text-red-500 text-sm">{errors.captionA.message}</p>}
-                </div>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="captionA"
+                        render={({ field }) => (
+                            <FormItem>
+                                <div className="flex items-center gap-2">
+                                    <FormLabel htmlFor="captionA">{evaluateModel.captionA.description}</FormLabel>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-4 w-4" type="button">
+                                                    <InfoIcon className="h-3 w-3" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right" className="max-w-[280px]">
+                                                <p>
+                                                    例:
+                                                    <br />
+                                                    京都の紅葉シーズンにふらっと一人旅🍁
+                                                    <br />
+                                                    早朝の清水寺は空気が澄んでて、本当に気持ちよかった。
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                                <FormControl>
+                                    <Textarea {...field} id="captionA" className="w-full border p-2" />
+                                </FormControl>
+                                <FormDescription className="text-right text-xs text-muted-foreground">
+                                    {field.value?.length || 0} / {evaluateModel.captionA.maxLength}
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                <div>
-                    <Label htmlFor="captionB">キャプションB</Label>
-                    <Textarea {...register('captionB')} id="captionB" className="w-full border p-2" />
-                    {errors.captionB && <p className="text-red-500 text-sm">{errors.captionB.message}</p>}
-                </div>
+                    <FormField
+                        control={form.control}
+                        name="captionB"
+                        render={({ field }) => (
+                            <FormItem>
+                                <div className="flex items-center gap-2">
+                                    <FormLabel htmlFor="captionB">{evaluateModel.captionB.description}</FormLabel>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-4 w-4" type="button">
+                                                    <InfoIcon className="h-3 w-3" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right" className="max-w-[280px]">
+                                                <p>
+                                                    例:
+                                                    <br />
+                                                    朝の清水寺で心が整った。こういう時間、大事。
+                                                    <br />
+                                                    #京都旅行 #紅葉シーズン #ひとり旅
+                                                </p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                                <FormControl>
+                                    <Textarea {...field} id="captionB" className="w-full border p-2" />
+                                </FormControl>
+                                <FormDescription className="text-right text-xs text-muted-foreground">
+                                    {field.value?.length || 0} / {evaluateModel.captionB.maxLength}
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                <div>
-                    <Label htmlFor="genre">投稿ジャンル</Label>
-                    <Input {...register('genre')} id="genre" className="w-full border p-2" />
-                </div>
+                    <FormField
+                        control={form.control}
+                        name="genre"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel htmlFor="genre">{evaluateModel.genre.description}</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        id="genre"
+                                        className="w-full border p-2"
+                                        placeholder="例: ファッション、美容"
+                                    />
+                                </FormControl>
+                                <FormDescription className="text-right text-xs text-muted-foreground">
+                                    {field.value?.length || 0} / {evaluateModel.genre.unwrap().maxLength}
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                <div>
-                    <Label htmlFor="target">ターゲット層</Label>
-                    <Input {...register('target')} id="target" className="w-full border p-2" />
-                </div>
+                    <FormField
+                        control={form.control}
+                        name="target"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel htmlFor="target">{evaluateModel.target.description}</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        id="target"
+                                        className="w-full border p-2"
+                                        placeholder="例: 20代女性"
+                                    />
+                                </FormControl>
+                                <FormDescription className="text-right text-xs text-muted-foreground">
+                                    {field.value?.length || 0} / {evaluateModel.target.unwrap().maxLength}
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                <Button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md">
-                    AIに評価してもらう
-                </Button>
-            </form>
+                    <Button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md">
+                        AIに評価してもらう
+                    </Button>
+                </form>
+            </Form>
 
             {loading && <p>評価中...</p>}
-            {result && (
-                <div className="mt-6 p-4 border rounded-md bg-muted">
-                    <h2 className="font-semibold">🧠 AIの評価結果</h2>
-                    <pre className="whitespace-pre-wrap text-sm">{result}</pre>
+            {result && !result.error && (
+                <div className="mt-6 p-4 border rounded-md bg-muted space-y-2">
+                    <p>
+                        ✅ <strong>おすすめ：</strong> {result.recommended}案
+                    </p>
+                    <p>
+                        💬 <strong>理由：</strong> {result.reason}
+                    </p>
+                    <div>
+                        <p className="font-semibold">💡 改善点</p>
+                        <ul className="list-disc list-inside text-sm text-gray-800">
+                            {result.improvements?.A && <li>A案: {result.improvements.A}</li>}
+                            {result.improvements?.B && <li>B案: {result.improvements.B}</li>}
+                        </ul>
+                    </div>
                 </div>
             )}
         </main>

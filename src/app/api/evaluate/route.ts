@@ -18,10 +18,21 @@ ${captionB}
 
 評価ポイント：言葉選び、感情の伝え方、共感度、具体性、ハッシュタグの有効性
 
-出力フォーマット：
-1. おすすめの投稿（A or B）
-2. 理由（300文字以内）
-3. それぞれの改善点（任意）
+---
+
+🎯 出力は以下のJSON形式でお願いします:
+
+{
+  "recommended": "A または B",
+  "reason": "おすすめした理由を200文字以内で簡潔に説明",
+  "improvements": {
+    "A": "A案の改善点を簡潔に",
+    "B": "B案の改善点を簡潔に"
+  }
+}
+
+※ JSON以外の文字や説明は含めないでください。
+※出力はコードブロック（\`\`\`）なしの、純粋なJSON文字列のみでお願いします。
 `
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -41,7 +52,15 @@ ${captionB}
     })
 
     const data = await response.json()
-    const message = data.choices?.[0]?.message?.content ?? '回答の取得に失敗しました'
+    const raw = data.choices?.[0]?.message?.content
+        .replace(/```json\s*([\s\S]*?)\s*```/, '$1') // ```json ... ``` の中身だけ抜き出す
+        .trim()
 
-    return NextResponse.json({ result: message })
+    let parsed
+    try {
+        parsed = JSON.parse(raw)
+    } catch (err) {
+        parsed = { error: 'AIからの返答を解析できませんでした', raw }
+    }
+    return NextResponse.json({ result: parsed })
 }
