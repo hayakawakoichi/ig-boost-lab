@@ -1,17 +1,17 @@
 'use client'
 
-import { Input } from '@/components/ui/input'
-import { LoadingButton } from '@/components/ui/button'
+import { Input } from '../components/ui/input'
+import { LoadingButton } from '../components/ui/button'
 
 import { useState } from 'react'
 import { EvaluateSchema, evaluateSchema, EvaluateResult, evaluateModel } from './schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form'
-import { PostCard } from '@/components/PostCard'
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '../components/ui/form'
+import { PostCard } from '../components/PostCard'
 import { toast } from 'sonner'
-import { EvaluationResult } from '@/components/EvaluationResult'
-import { uploadToCloudinary } from '@/lib/uploadToCloudinary'
+import { EvaluationResult } from '../components/EvaluationResult'
+import { uploadToCloudinary } from '../lib/uploadToCloudinary'
 
 export default function HomePage() {
     const form = useForm<EvaluateSchema>({
