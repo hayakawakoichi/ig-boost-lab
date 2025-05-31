@@ -67,7 +67,8 @@ export default function HomePage() {
                 imageB: urlB,
             }
 
-            const res = await fetch('/api/vision-evaluate', {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const res = await fetch(`${apiUrl}/vision-evaluate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

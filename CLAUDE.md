@@ -9,11 +9,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm install
 
 # Development
-pnpm dev                    # Start Next.js dev server with Turbopack
-pnpm build                  # Build for production
+pnpm dev                    # Start both web and API servers
+# OR start individually:
+pnpm --filter web dev       # Start Next.js dev server (port 3000)
+pnpm --filter api dev       # Start Hono API server (port 3001)
+
+# Production
+pnpm build                  # Build all apps
+pnpm start                  # Start all apps in production mode
+
+# Code Quality
 pnpm lint                   # Run ESLint
 pnpm format                 # Format code with Prettier
-pnpm check-types           # TypeScript type checking (in apps/web)
+pnpm check-types           # TypeScript type checking
 ```
 
 ## Architecture Overview
@@ -21,29 +29,33 @@ pnpm check-types           # TypeScript type checking (in apps/web)
 ### Monorepo Structure
 
 -   **Framework**: Turbo-powered monorepo with pnpm workspaces
--   **Main App**: `/apps/web/` - Next.js 15 app with App Router
+-   **Web App**: `/apps/web/` - Next.js 15 app with App Router (port 3000)
+-   **API Server**: `/apps/api/` - Hono API server (port 3001)
 -   **Package Manager**: pnpm v10.10.0 (strict version enforcement)
 
 ### Core Application Flow
 
 InstaBoostLab is an AI-powered Instagram A/B testing tool:
 
-1. User uploads 2 images + captions + context (genre/target audience)
-2. Images upload directly to Cloudinary (client-side)
-3. OpenAI GPT-4o-mini analyzes both posts with vision capabilities
-4. Returns structured recommendations and improvements
+1. **Frontend** (Next.js): User uploads 2 images + captions + context
+2. **Image Upload**: Direct client-to-Cloudinary upload
+3. **API Call**: Frontend calls Hono API server with image URLs + text
+4. **AI Analysis**: Hono server calls OpenAI GPT-4o-mini with vision
+5. **Response**: Structured recommendations returned to frontend
 
 ### Schema-Driven Architecture
 
--   **Pattern**: Zod schemas in `/src/app/schema.ts` serve as single source of truth
+-   **Shared Schema**: Zod schemas in both `/apps/web/src/app/schema.ts` and `/apps/api/src/schema.ts`
 -   **Type Generation**: Automatic TypeScript types via `z.infer`
--   **Validation**: Runtime validation + React Hook Form integration
+-   **Validation**: Runtime validation in both frontend forms and API endpoints
 -   **Structure**: `evaluateModel` object pattern for field definitions with descriptions and limits
 
 ### API Architecture
 
--   **Endpoint**: `/api/vision-evaluate` - Node.js runtime
+-   **Server**: Hono framework on Node.js (port 3001)
+-   **Endpoint**: `POST /vision-evaluate`
 -   **Model**: GPT-4o-mini with multi-modal messages (text + image URLs)
+-   **CORS**: Configured for localhost development
 -   **Input**: Cloudinary URLs + captions + context
 -   **Output**: Structured JSON with recommendation and improvements
 
@@ -64,10 +76,13 @@ InstaBoostLab is an AI-powered Instagram A/B testing tool:
 ## Environment Requirements
 
 ```bash
-# Required in .env.local
-OPENAI_API_KEY=sk-xxxxx
+# Web App (.env.local in apps/web/)
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=xxxxx
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=xxxxx
+NEXT_PUBLIC_API_URL=http://localhost:3001  # Optional, defaults to localhost:3001
+
+# API Server (.env in apps/api/)
+OPENAI_API_KEY=sk-xxxxx
 ```
 
 ## Key Development Patterns
@@ -94,9 +109,18 @@ NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=xxxxx
 
 ## Tech Stack
 
+### Frontend (apps/web)
 -   **Next.js 15** (App Router, React 19, TypeScript)
 -   **Styling**: Tailwind CSS v4, shadcn/ui, Radix UI
 -   **Forms**: React Hook Form, Zod
--   **AI**: OpenAI GPT-4o-mini with vision
 -   **Images**: Cloudinary
+
+### Backend (apps/api)
+-   **Hono** (Fast web framework)
+-   **Runtime**: Node.js with tsx for development
+-   **AI**: OpenAI GPT-4o-mini with vision
+-   **Validation**: Zod
+
+### Development
 -   **Build**: Turbo, pnpm workspaces
+-   **TypeScript**: Full type safety across frontend and backend
